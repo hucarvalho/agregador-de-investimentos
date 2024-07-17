@@ -1,6 +1,7 @@
 package carval.adi.agregadorDeInvestimentos.controller;
 
 import carval.adi.agregadorDeInvestimentos.dto.UserCreateRecordDto;
+import carval.adi.agregadorDeInvestimentos.dto.UserUpdateRecordDto;
 import carval.adi.agregadorDeInvestimentos.entity.User;
 import carval.adi.agregadorDeInvestimentos.repository.UserRepository;
 import carval.adi.agregadorDeInvestimentos.service.UserService;
@@ -37,7 +38,7 @@ public class UserController {
     public ResponseEntity<Object> getById(@PathVariable(name = "id") String id)
     {
         var user = service.find(id);
-        if(user != null){
+        if(user.isPresent()){
             return ResponseEntity.ok(user);
         }
         return ResponseEntity.notFound().build();
@@ -52,6 +53,20 @@ public class UserController {
         }
         return ResponseEntity.notFound().build();
 
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<User> destroy(@PathVariable(name = "id") String id)
+    {
+        service.delete(id);
+
+        return ResponseEntity.noContent().build();
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> edit(@PathVariable(name = "id") String id, @RequestBody UserUpdateRecordDto userUpdateRecordDto)
+    {
+        service.update(id, userUpdateRecordDto);
+        return ResponseEntity.noContent().build();
     }
 
 }

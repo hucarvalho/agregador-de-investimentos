@@ -1,6 +1,7 @@
 package carval.adi.agregadorDeInvestimentos.service;
 
 import carval.adi.agregadorDeInvestimentos.dto.UserCreateRecordDto;
+import carval.adi.agregadorDeInvestimentos.dto.UserUpdateRecordDto;
 import carval.adi.agregadorDeInvestimentos.entity.User;
 import carval.adi.agregadorDeInvestimentos.repository.UserRepository;
 
@@ -36,14 +37,39 @@ public class UserService {
         return saved.getId();
     }
 
-    public User find(String id)
+    public Optional<User> find(String id)
     {
         Optional<User> optionalUser = repository.findById(UUID.fromString(id));
-        return optionalUser.orElse(null);
+        return optionalUser;
     }
 
     public List<User> get()
     {
         return  repository.findAll();
     }
+
+    public void delete(String id)
+    {
+        boolean userExist = repository.existsById(UUID.fromString(id));
+        if(userExist) {
+            repository.deleteById(UUID.fromString(id));
+        }
+
+    }
+    public void update(String id, UserUpdateRecordDto userUpdateRecordDto)
+    {
+        var userEntity = repository.findById(UUID.fromString(id));
+        if(userEntity.isPresent()){
+            var user = userEntity.get();
+            if(userUpdateRecordDto.username() != null){
+                user.setUsername(userUpdateRecordDto.username());
+            }
+            if(userUpdateRecordDto.password() != null){
+                user.setPassword(userUpdateRecordDto.password());
+            }
+            repository.save(user);
+        }
+    }
+
+
 }
