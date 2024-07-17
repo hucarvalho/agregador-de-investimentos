@@ -1,0 +1,10 @@
+services:
+  mysql:
+    image: 'mysql:latest'
+    environment:
+      - 'MYSQL_DATABASE=adi'
+      - 'MYSQL_PASSWORD=linkinpark'
+      - 'MYSQL_ROOT_PASSWORD=linkinpark'
+      - 'MYSQL_USER=root'
+    ports:
+      - '33061:3306'
