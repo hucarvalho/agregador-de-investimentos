@@ -1,6 +1,7 @@
 package carval.adi.agregadorDeInvestimentos.service;
 
 import carval.adi.agregadorDeInvestimentos.dto.UserCreateRecordDto;
+import carval.adi.agregadorDeInvestimentos.dto.UserUpdateRecordDto;
 import carval.adi.agregadorDeInvestimentos.entity.User;
 import carval.adi.agregadorDeInvestimentos.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -208,6 +209,150 @@ class UserServiceTest {
             verify(repository, times(1)).existsById(uuid);
             verify(repository, times(0)).deleteById(any());
 
+        }
+    }
+    @Nested
+    class update{
+        @Test
+        @DisplayName("Should update a user, when this user exists and username and password is filled")
+        void shouldUpdateUserWhenUserExistsAndUsernameAndPasswordIsFilled() {
+            var user = new User(
+                    UUID.randomUUID(),
+                    "Usuario",
+                    "usuario@gmail.com",
+                    "123",
+                    Instant.now(),
+                    null
+            );
+            doReturn(Optional.of(user))
+                    .when(repository)
+                    .findById(uuidArgumentCaptor.capture());
+            doReturn(user)
+                    .when(repository)
+                    .save(userArgumentCaptor.capture());
+            var input = new UserUpdateRecordDto(
+                    "newUsuario",
+                    "newPassword"
+            );
+            //act
+            userService.update(user.getId().toString(), input);
+
+            //assert
+            var uuidCapture = uuidArgumentCaptor.getValue();
+            var userCapture = userArgumentCaptor.getValue();
+            assertEquals(input.username(), userCapture.getUsername());
+            assertEquals(input.password(), userCapture.getPassword());
+            assertEquals(user.getId(), uuidCapture);
+
+            verify(repository, times(1)).findById(uuidCapture);
+            verify(repository, times(1)).save(userCapture);
+        }
+
+        @Test
+        @DisplayName("Should update a user, when this user exists and username and password is filled")
+        void shouldNotUpdateUserWhenUserNotExists() {
+
+            doReturn(Optional.empty())
+                    .when(repository)
+                    .findById(uuidArgumentCaptor.capture());
+
+            var uuid = UUID.randomUUID();
+            var input = new UserUpdateRecordDto(
+                    "newUsuario",
+                    "newPassword"
+            );
+            //act
+            userService.update(uuid.toString(), input);
+
+            //assert
+            var uuidCapture = uuidArgumentCaptor.getValue();
+
+            assertEquals(uuid, uuidCapture);
+
+
+
+            verify(repository, times(1)).findById(uuidCapture);
+            verify(repository, times(0)).save(any());
+        }
+        @Test
+        @DisplayName("Should update a user, when this user exists and username is filled")
+        void shouldUpdateUserWhenUserExistsAndUsernameIsFilled() {
+            var user = new User(
+                    UUID.randomUUID(),
+                    "Usuario",
+                    "usuario@gmail.com",
+                    "123",
+                    Instant.now(),
+                    null
+            );
+
+            doReturn(Optional.of(user))
+                    .when(repository)
+                    .findById(uuidArgumentCaptor.capture());
+            doReturn(user)
+                    .when(repository)
+                    .save(userArgumentCaptor.capture());
+
+
+            var input = new UserUpdateRecordDto(
+                    "newUsuario",
+                    null
+            );
+            //act
+            userService.update(user.getId().toString(), input);
+
+            //assert
+            var uuidCapture = uuidArgumentCaptor.getValue();
+            var userCapture = userArgumentCaptor.getValue();
+
+            assertEquals(user.getId(), uuidCapture);
+            assertNotEquals(input.password(), userCapture.getPassword());
+            assertEquals(input.username(), userCapture.getUsername());
+
+
+
+            verify(repository, times(1)).findById(uuidCapture);
+            verify(repository, times(1)).save(userCapture);
+        }
+        @Test
+        @DisplayName("Should update a user, when this user exists and password is filled")
+        void shouldUpdateUserWhenUserExistsAndPasswordIsFilled() {
+            var user = new User(
+                    UUID.randomUUID(),
+                    "Usuario",
+                    "usuario@gmail.com",
+                    "123",
+                    Instant.now(),
+                    null
+            );
+
+            doReturn(Optional.of(user))
+                    .when(repository)
+                    .findById(uuidArgumentCaptor.capture());
+            doReturn(user)
+                    .when(repository)
+                    .save(userArgumentCaptor.capture());
+
+
+            var input = new UserUpdateRecordDto(
+                    null,
+                    "newPassword"
+            );
+            //act
+            userService.update(user.getId().toString(), input);
+
+            //assert
+            var uuidCapture = uuidArgumentCaptor.getValue();
+            var userCapture = userArgumentCaptor.getValue();
+
+            assertEquals(user.getId(), uuidCapture);
+            assertNotEquals(input.username(), userCapture.getUsername());
+            assertEquals(input.password(), userCapture.getPassword());
+
+
+
+            verify(repository, times(1)).findById(uuidCapture);
+            verify(repository, times(1)).save(userCapture);
         }
     }
 
