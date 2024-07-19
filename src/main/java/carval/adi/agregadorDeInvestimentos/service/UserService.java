@@ -1,13 +1,19 @@
 package carval.adi.agregadorDeInvestimentos.service;
 
-import carval.adi.agregadorDeInvestimentos.dto.UserCreateRecordDto;
-import carval.adi.agregadorDeInvestimentos.dto.UserUpdateRecordDto;
+import carval.adi.agregadorDeInvestimentos.dto.*;
+import carval.adi.agregadorDeInvestimentos.entity.Account;
+import carval.adi.agregadorDeInvestimentos.entity.BillingAdress;
 import carval.adi.agregadorDeInvestimentos.entity.User;
+import carval.adi.agregadorDeInvestimentos.repository.AccountRepository;
+import carval.adi.agregadorDeInvestimentos.repository.BillingAdressRepository;
 import carval.adi.agregadorDeInvestimentos.repository.UserRepository;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,9 +22,14 @@ import java.util.UUID;
 public class UserService {
 
     private UserRepository repository;
+    private AccountRepository accountRepository;
+    private BillingAdressRepository billingAdressRepository;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, AccountRepository accountRepository, BillingAdressRepository billingAdressRepository) {
         this.repository = repository;
+        this.accountRepository = accountRepository;
+        this.billingAdressRepository = billingAdressRepository;
+
     }
 
     public UUID create(UserCreateRecordDto userCreateRecordDto)
@@ -32,6 +43,7 @@ public class UserService {
                 null
         );
 
+
         var saved = repository.save(user);
 
         return saved.getId();
@@ -43,9 +55,20 @@ public class UserService {
         return optionalUser;
     }
 
-    public List<User> get()
+    public List<UserResponseRecordDto> get()
     {
-        return  repository.findAll();
+
+        var users = repository.findAll()
+                .stream()
+                .map(us-> new UserResponseRecordDto(
+                        us.getId().toString(),
+                        us.getUsername(),
+                        us.getEmail(),
+                        us.getAccounts().size(),
+                        us.getCreated_at().toString()
+                ))
+                .toList();
+        return  users;
     }
 
     public void delete(String id)
@@ -72,4 +95,45 @@ public class UserService {
     }
 
 
+    public void createAccount(String id, AccountCreateRecordDto accountCreateRecordDto)
+    {
+        var user = repository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+
+        Account account = new Account(
+                UUID.randomUUID(),
+                accountCreateRecordDto.description(),
+                user,
+                null,
+                new ArrayList<>()
+        );
+
+        var accountCreated = accountRepository.save(account);
+
+        BillingAdress billingAdress = new BillingAdress(
+                accountCreated.getId(),
+                accountCreateRecordDto.street(),
+                accountCreateRecordDto.number(),
+                accountCreated
+        );
+
+        billingAdressRepository.save(billingAdress);
+
+    }
+
+    public List<AccountResponseDto> getAccounts(String id)
+    {
+        var user = repository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        var accounts = user.getAccounts()
+                .stream()
+                .map(ac
+                        -> new AccountResponseDto(
+                                ac.getId().toString(), ac.getDescription()
+                ))
+                .toList();
+        return accounts;
+    }
 }
