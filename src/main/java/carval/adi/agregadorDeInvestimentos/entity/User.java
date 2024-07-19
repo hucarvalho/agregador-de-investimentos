@@ -5,6 +5,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -31,6 +32,12 @@ public class User {
 
     @UpdateTimestamp
     private Instant updated_at;
+
+    @OneToMany(mappedBy = "user")
+    //indica-se em qual campo foi mapeado do outro lado da entidade
+    //um usuario para muitas contas
+    private List<Account> accounts;
+    //um usuario vai poder ter varias contas, e uma conta pertence a um usuário
 
     public User(UUID id, String username, String email, String password, Instant created_at, Instant updated_at) {
         this.id = id;
@@ -90,6 +97,14 @@ public class User {
 
     public void setUpdated_at(Instant updated_at) {
         this.updated_at = updated_at;
+    }
+
+    public List<Account> getAccounts() {
+        return accounts;
+    }
+
+    public void setAccounts(List<Account> accounts) {
+        this.accounts = accounts;
     }
 
     @Override
