@@ -1,7 +1,6 @@
 package carval.adi.agregadorDeInvestimentos.controller;
 
-import carval.adi.agregadorDeInvestimentos.dto.UserCreateRecordDto;
-import carval.adi.agregadorDeInvestimentos.dto.UserUpdateRecordDto;
+import carval.adi.agregadorDeInvestimentos.dto.*;
 import carval.adi.agregadorDeInvestimentos.entity.User;
 import carval.adi.agregadorDeInvestimentos.repository.UserRepository;
 import carval.adi.agregadorDeInvestimentos.service.UserService;
@@ -20,7 +19,7 @@ import java.util.UUID;
 @RequestMapping("/v1/users")
 public class UserController {
 
-    private UserService service;
+    private final UserService service;
 
     public UserController(UserService service) {
         this.service = service;
@@ -45,10 +44,10 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> get()
+    public ResponseEntity<List<UserResponseRecordDto>> get()
     {
-        List<User> users = service.get();
-        if(users.size() > 0){
+        List<UserResponseRecordDto> users = service.get();
+        if(!users.isEmpty()){
             return  ResponseEntity.ok(users);
         }
         return ResponseEntity.notFound().build();
@@ -67,6 +66,21 @@ public class UserController {
     {
         service.update(id, userUpdateRecordDto);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/accounts")
+    public ResponseEntity<Void> storeAccount(@PathVariable(name = "id") String id,
+                                             @RequestBody AccountCreateRecordDto accountCreateRecordDto)
+    {
+        service.createAccount(id, accountCreateRecordDto);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/accounts")
+    public ResponseEntity<List<AccountResponseDto>> getAccount(@PathVariable(name = "id") String id)
+    {
+        var accounts = service.getAccounts(id);
+        return ResponseEntity.ok(accounts);
     }
 
 }
