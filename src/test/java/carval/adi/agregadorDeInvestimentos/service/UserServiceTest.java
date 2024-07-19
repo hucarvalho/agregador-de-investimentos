@@ -1,8 +1,11 @@
 package carval.adi.agregadorDeInvestimentos.service;
 
+import carval.adi.agregadorDeInvestimentos.dto.AccountCreateRecordDto;
 import carval.adi.agregadorDeInvestimentos.dto.UserCreateRecordDto;
 import carval.adi.agregadorDeInvestimentos.dto.UserUpdateRecordDto;
+import carval.adi.agregadorDeInvestimentos.entity.Account;
 import carval.adi.agregadorDeInvestimentos.entity.User;
+import carval.adi.agregadorDeInvestimentos.repository.AccountRepository;
 import carval.adi.agregadorDeInvestimentos.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,8 +16,11 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,6 +37,8 @@ class UserServiceTest {
     private UserRepository repository;
     //garantir que classes que são usadas na classe que será testada não interfiram no teste
 
+    @Mock
+    private User userClass;
     @Captor
     private ArgumentCaptor<User> userArgumentCaptor;
 
@@ -39,6 +47,7 @@ class UserServiceTest {
 
     @InjectMocks
     private UserService userService;
+
     //injeção da classe testada seguindo o mock acima
 
 
@@ -139,7 +148,7 @@ class UserServiceTest {
     @Nested
     class get{
         @Test
-        void shouldReturnAllUsersWithSuccess() {
+        void shouldReturnAllUsersWithSuccessWhenUsersHaveAccounts() {
             var user = new User(
                     UUID.randomUUID(),
                     "Usuario",
@@ -148,11 +157,70 @@ class UserServiceTest {
                     Instant.now(),
                     null
             );
+
+            var account = new Account(
+                    UUID.randomUUID(),
+                    "description",
+                    user,
+                    null,
+                    null
+            );
+
+
+            var accountsList = List.of(account);
+            user.setAccounts(accountsList);
             var usersList = List.of(user);
 
             doReturn(usersList)
                     .when(repository)
                     .findAll();
+
+
+
+            var output = userService.get();
+
+            assertNotNull(output);
+            assertEquals(usersList.size(), output.size());
+        }
+        @Test
+        void shouldReturnAllUsersWithSuccessWhenAUserNoHaveAccounts() {
+            var user = new User(
+                    UUID.randomUUID(),
+                    "Usuario",
+                    "usuario@gmail.com",
+                    "123",
+                    Instant.now(),
+                    null
+            );
+
+            var user2 = new User(
+                    UUID.randomUUID(),
+                    "Usuario2",
+                    "usuario2@gmail.com",
+                    "123",
+                    Instant.now(),
+                    null
+            );
+            List<Account> accountList2 = new ArrayList<Account>();
+            var account = new Account(
+                    UUID.randomUUID(),
+                    "description",
+                    user,
+                    null,
+                    null
+            );
+
+
+            var accountsList = List.of(account);
+            user.setAccounts(accountsList);
+            user2.setAccounts(accountList2);
+            var usersList = List.of(user, user2);
+
+            doReturn(usersList)
+                    .when(repository)
+                    .findAll();
+
+
 
             var output = userService.get();
 
@@ -355,6 +423,35 @@ class UserServiceTest {
             verify(repository, times(1)).save(userCapture);
         }
     }
+    @Nested
+    class createAccount{
+        @Test
+        void shouldNotProceedWithAccountCreateIfNotUserExists() {
+            //arrange
+            UUID id = UUID.randomUUID();
 
+                   doThrow(
+                                    new ResponseStatusException(HttpStatus.NOT_FOUND)
+                            )
+                            .when(repository)
+                            .findById(uuidArgumentCaptor.capture());
+
+
+
+
+            AccountCreateRecordDto input = new AccountCreateRecordDto(
+                    "description",
+                    "street",
+                    321
+            );
+
+            //act
+
+
+            //assert
+            assertThrows( ResponseStatusException.class, () -> userService.createAccount(id.toString(), input));
+            assertEquals(id, uuidArgumentCaptor.getValue());
+        }
+    }
 
 }
