@@ -74,6 +74,14 @@ public class Account {
         this.billingAdress = billingAdress;
     }
 
+    public List<AccountStock> getAccountStocks() {
+        return accountStocks;
+    }
+
+    public void setAccountStocks(List<AccountStock> accountStocks) {
+        this.accountStocks = accountStocks;
+    }
+
     @Override
     public String toString() {
         return "Account{" +

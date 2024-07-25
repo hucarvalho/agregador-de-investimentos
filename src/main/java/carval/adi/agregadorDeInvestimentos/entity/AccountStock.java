@@ -29,6 +29,10 @@ public class AccountStock {
         this.quantity = quantity;
     }
 
+    public AccountStock() {
+
+    }
+
     public AccountStockId getId() {
         return id;
     }
